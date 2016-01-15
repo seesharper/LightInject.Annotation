@@ -16,8 +16,7 @@
             <dependency id="LightInject.Source" version="4.0.0.1" />          
         </dependencies>
     </metadata>
-    <files>
-        <file src="content\net40\LightInject.Annotation\LightInject.Annotation.cs.pp" target="content\net40\LightInject.Annotation\LightInject.Annotation.cs.pp" />
+    <files>       
         <file src="content\net45\LightInject.Annotation\LightInject.Annotation.cs.pp" target="content\net45\LightInject.Annotation\LightInject.Annotation.cs.pp" />
         <file src="content\net46\LightInject.Annotation\LightInject.Annotation.cs.pp" target="content\net46\LightInject.Annotation\LightInject.Annotation.cs.pp" />
         <file src="content\dnxcore50\LightInject.Annotation\LightInject.Annotation.cs.pp" target="content\dnxcore50\LightInject.Annotation\LightInject.Annotation.cs.pp" />
