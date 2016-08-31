@@ -10,14 +10,14 @@ private static int depth = 0;
 
 private static string lastWriteOperation;
 
-public static class DNU
+public static class DotNet
 {
     public static void Build(string pathToProjectFile, string frameworkMoniker)
-    {        
-        Command.Execute("cmd.exe","/C dnu.cmd --version " , ".");
-        Command.Execute("cmd.exe","/C dnu.cmd restore " + pathToProjectFile, ".");        
-        Command.Execute("cmd.exe","/C dnu.cmd build " + pathToProjectFile + " --framework " + frameworkMoniker + " --configuration Release" , ".");   
-    }        
+    {
+        Command.Execute("dotnet.exe","--version", ".");
+        Command.Execute("dotnet.exe","restore " + pathToProjectFile, ".");        
+        Command.Execute("dotnet.exe","build " + pathToProjectFile + " --framework " + frameworkMoniker + " --configuration Release" , ".");   
+    }
 }
 
 public static void RoboCopy(string source, string destination, string arguments = null)
@@ -104,9 +104,17 @@ public static string ResolveDirectory(string path, string filePattern)
 public static string GetFile(string path, string filePattern)
 {
     WriteLine("Looking for {0} in {1}", filePattern, path);
-    string pathToFile = Directory.GetFiles(path, filePattern, SearchOption.AllDirectories).Single();
-    WriteLine("Found {0}", pathToFile);    
-    return pathToFile;    
+    string[] pathsToFile = Directory.GetFiles(path, filePattern, SearchOption.AllDirectories).ToArray();
+    if (pathsToFile.Length > 1)
+    {
+        WriteLine("Found multiple files");
+        var files = pathsToFile.Select(p => new FileInfo(p));
+        var file = files.OrderBy(f => f.LastWriteTime).Last();
+        WriteLine("Choosing {0}",file.FullName);
+        return file.FullName;
+    }
+    WriteLine("Found {0}", pathsToFile[0]);    
+    return pathsToFile[0];    
 }
 
 private static string CopyToNuGetBuildDirectory(string projectPath)
@@ -159,7 +167,7 @@ public static void PatchAssemblyVersionInfo(string version, string fileVersion, 
 public static string GetVersionNumberFromSourceFile(string pathToSourceFile)
 {
     var source = ReadFile(pathToSourceFile);
-    var versionNumber = Regex.Match(source, @"version\s(\d\.\d\.\d\.\d)").Groups[1].Value;
+    var versionNumber = Regex.Match(source, @"version\s(\d\.\d\.\d\S*)").Groups[1].Value;
     return versionNumber;
 }
 

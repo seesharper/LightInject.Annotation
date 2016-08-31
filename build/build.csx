@@ -23,7 +23,7 @@ Execute(() => InternalizeSourceVersions(), "Internalizing source versions");
 Execute(() => RestoreNuGetPackages(), "NuGet");
 Execute(() => BuildAllFrameworks(), "Building all frameworks");
 Execute(() => RunAllUnitTests(), "Running unit tests");
-Execute(() => AnalyzeTestCoverage(), "Analyzing test coverage");
+//Execute(() => AnalyzeTestCoverage(), "Analyzing test coverage");
 Execute(() => CreateNugetPackages(), "Creating NuGet packages");
 
 private void CreateNugetPackages()
@@ -45,18 +45,25 @@ private void CopySourceFilesToNuGetLibDirectory()
 {	
 	CopySourceFile("NET45", "net45");
 	CopySourceFile("NET46", "net46");		
-	CopySourceFile("DNX451", "dnx451");		
-	CopySourceFile("DNXCORE50", "dnxcore50");	
-    CopySourceFile("PCL_111", "portable-net45+win81+wpa81+MonoAndroid10+MonoTouch10+Xamarin.iOS10");
+	CopySourceFile("NETSTANDARD11", "netstandard1.1");		
+	CopySourceFile("NETSTANDARD13", "netstandard1.3");	
+    CopySourceFile("PCL_111", "portable-net45+netcore45+wpa81");
+	CopySourceFile("PCL_111", "Xamarin.iOS");
+	CopySourceFile("PCL_111", "monoandroid");
+	CopySourceFile("PCL_111", "monotouch");
 }
 
 private void CopyBinaryFilesToNuGetLibDirectory()
 {
 	CopyBinaryFile("NET45", "net45");
 	CopyBinaryFile("NET46", "net46");	
-	CopyBinaryFile("DNX451", "dnx451");
-	CopyBinaryFile("DNXCORE50", "dnxcore50");
-    CopyBinaryFile("PCL_111", "portable-net45+win81+wpa81+MonoAndroid10+MonoTouch10+Xamarin.iOS10");		
+	CopyBinaryFile("NETSTANDARD11", "netstandard1.1");
+	CopyBinaryFile("NETSTANDARD13", "netstandard1.3");
+    CopyBinaryFile("PCL_111", "portable-net45+netcore45+wpa81");
+    CopyBinaryFile("PCL_111", "Xamarin.iOS");
+	CopyBinaryFile("PCL_111", "monoandroid");
+	CopyBinaryFile("PCL_111", "monotouch");
+   		
 }
 
 private void CreateSourcePackage()
@@ -92,7 +99,7 @@ private void CopyBinaryFile(string frameworkMoniker, string packageDirectoryName
 	RoboCopy(pathToMetadata, pathToPackageDirectory, "LightInject.Annotation.nuspec");
 	string pathToBinaryFile =  ResolvePathToBinaryFile(frameworkMoniker);
 	string pathToDestination = Path.Combine(pathToPackageDirectory, "lib/" + packageDirectoryName);
-	RoboCopy(pathToBinaryFile, pathToDestination, "LightInject.Annotation.*");
+	RoboCopy(pathToBinaryFile, pathToDestination, "LightInject.Annotation.* /xf *.json");
 }
 
 private string ResolvePathToBinaryFile(string frameworkMoniker)
@@ -106,7 +113,7 @@ private void BuildAllFrameworks()
 	Build("Net45");
 	Build("Net46");	
     Build("Pcl_111");	
-	BuildDnx();
+	BuildDotNet();
 }
 
 private void Build(string frameworkMoniker)
@@ -118,13 +125,13 @@ private void Build(string frameworkMoniker)
 	MsBuild.Build(pathToSolutionFile);
 }
 
-private void BuildDnx()
+private void BuildDotNet()
 {
-	string pathToProjectFile = Path.Combine(pathToBuildDirectory, @"DNXCORE50/Binary/LightInject.Annotation/project.json");
-	DNU.Build(pathToProjectFile, "DNXCORE50");
+	string pathToProjectFile = Path.Combine(pathToBuildDirectory, @"netstandard11/Binary/LightInject.Annotation/project.json");
+	DotNet.Build(pathToProjectFile, "netstandard1.1");
 	
-	pathToProjectFile = Path.Combine(pathToBuildDirectory, @"DNX451/Binary/LightInject.Annotation/project.json");
-	DNU.Build(pathToProjectFile, "DNX451");
+	pathToProjectFile = Path.Combine(pathToBuildDirectory, @"netstandard13/Binary/LightInject.Annotation/project.json");
+	DotNet.Build(pathToProjectFile, "netstandard13");
 }
 
 private void RestoreNuGetPackages()
@@ -152,7 +159,7 @@ private void RunAllUnitTests()
 	DirectoryUtils.Delete("TestResults");
 	Execute(() => RunUnitTests("Net45"), "Running unit tests for Net45");
 	Execute(() => RunUnitTests("Net46"), "Running unit tests for Net46");
-		
+	Execute(() => RunUnitTests("PCL_111"), "Running unit tests for PCL_111");	
 }
 
 private void RunUnitTests(string frameworkMoniker)
@@ -182,8 +189,8 @@ private void InitializBuildDirectories()
 	DirectoryUtils.Delete(pathToBuildDirectory);	
 	Execute(() => InitializeNugetBuildDirectory("NET45"), "Preparing Net45");
 	Execute(() => InitializeNugetBuildDirectory("NET46"), "Preparing Net46");
-	Execute(() => InitializeNugetBuildDirectory("DNXCORE50"), "Preparing DNXCORE50");
-	Execute(() => InitializeNugetBuildDirectory("DNX451"), "Preparing DNX451");	
+	Execute(() => InitializeNugetBuildDirectory("NETSTANDARD11"), "Preparing NetStandard1.1");
+	Execute(() => InitializeNugetBuildDirectory("NETSTANDARD13"), "Preparing NetStandard1.3");	
     Execute(() => InitializeNugetBuildDirectory("PCL_111"), "Preparing PCL_111");						
 }
 
@@ -197,7 +204,7 @@ private void InitializeNugetBuildDirectory(string frameworkMoniker)
 	CreateDirectory(pathToSource);
 	RoboCopy("../src", pathToSource, "/e /XD bin obj .vs NuGet TestResults packages");
 	
-	if (frameworkMoniker.StartsWith("DNX"))
+	if (frameworkMoniker.StartsWith("NETSTANDARD"))
 	{
 		var pathToJsonTemplateFile = Path.Combine(pathToBinary, "LightInject.Annotation/project.json_");
 		var pathToJsonFile = Path.Combine(pathToBinary, "LightInject.Annotation/project.json");
@@ -227,8 +234,8 @@ private void RenameSolutionFiles()
 {	
 	RenameSolutionFile("NET45");
 	RenameSolutionFile("NET46");
-	RenameSolutionFile("DNXCORE50");
-	RenameSolutionFile("DNX451");	
+	RenameSolutionFile("NETSTANDARD11");
+	RenameSolutionFile("NETSTANDARD13");	
     RenameSolutionFile("PCL_111");
 }
 
@@ -261,14 +268,15 @@ private void InternalizeSourceVersions()
 {
 	Execute (()=> Internalize("NET45"), "Internalizing NET45");
 	Execute (()=> Internalize("NET46"), "Internalizing NET46");
-	Execute (()=> Internalize("DNXCORE50"), "Internalizing DNXCORE50");
-	Execute (()=> Internalize("DNX451"), "Internalizing DNX451");
+	Execute (()=> Internalize("NETSTANDARD11"), "Internalizing NetStandard1.1");
+	Execute (()=> Internalize("NETSTANDARD13"), "Internalizing NetStandard1.3");
 }
 
 private void PatchPackagesConfig()
 {
 	PatchPackagesConfig("net45");
-	PatchPackagesConfig("net45");	
+	PatchPackagesConfig("net46");
+
 }
 
 private void PatchPackagesConfig(string frameworkMoniker)
@@ -284,8 +292,8 @@ private void PatchAssemblyInfo()
 {
 	Execute(() => PatchAssemblyInfo("Net45"), "Patching AssemblyInfo (Net45)");
 	Execute(() => PatchAssemblyInfo("Net46"), "Patching AssemblyInfo (Net46)");	
-	Execute(() => PatchAssemblyInfo("DNXCORE50"), "Patching AssemblyInfo (DNXCORE50)");
-	Execute(() => PatchAssemblyInfo("DNX451"), "Patching AssemblyInfo (DNX451)");	
+	Execute(() => PatchAssemblyInfo("NETSTANDARD11"), "Patching AssemblyInfo (NetStandard1.1)");
+	Execute(() => PatchAssemblyInfo("NETSTANDARD13"), "Patching AssemblyInfo (NetStandard1.3)");	
     Execute(() => PatchAssemblyInfo("PCL_111"), "Patching AssemblyInfo (PCL_111)");
 }
 
@@ -359,7 +367,7 @@ private void SetHintPath(string frameworkMoniker, string pathToProjectFile)
 {
 	if (frameworkMoniker == "PCL_111")
 	{
-		frameworkMoniker = "portable-net45+win81+wpa81+MonoAndroid10+MonoTouch10+Xamarin.iOS10";
+		frameworkMoniker = "portable-net45+netcore45+wpa81";
 	}
 	ReplaceInFile(@"(.*\\packages\\LightInject.*\\lib\\).*(\\.*)","$1"+ frameworkMoniker + "$2", pathToProjectFile);	
 }
